@@ -11,7 +11,7 @@ const app = express();
 // Connect Database
 connectDB();
 
-app.use(cors());
+app.use(cors()); // 5000 to 3000
 
 // Middleware
 app.use(express.json());

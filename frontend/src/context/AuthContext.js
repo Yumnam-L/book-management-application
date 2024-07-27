@@ -1,37 +1,67 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+// AuthContext.js
+import React, { createContext, useState, useEffect } from "react";
+import api from "../services/api";
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState({
-    token: localStorage.getItem('token'),
-    isAuthenticated: false,
-    loading: true,
-    user: null,
-  });
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (auth.token) {
-      const fetchProfile = async () => {
+    const loadUser = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
         try {
-          const response = await axios.get('/api/auth/profile', {
-            headers: { Authorization: auth.token },
-          });
-          setAuth({ ...auth, isAuthenticated: true, loading: false, user: response.data });
+          console.log("inside authcontext try block loaduser");
+          const response = await api.get(
+            "/profile"
+            //   , {
+            //   headers: {
+            //     Authorization: `Bearer ${token}`,
+            //   },
+            // }
+          );
+          setUser(response.data);
         } catch (error) {
-          setAuth({ ...auth, isAuthenticated: false, loading: false });
+          console.error("Error fetching profile:", error);
         }
-      };
-      fetchProfile();
-    } else {
-      setAuth({ ...auth, loading: false });
+      }
+      setLoading(false);
+    };
+    loadUser();
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+      console.log("token: ", token);
+      const userResponse = await api.get(
+        "/profile"
+        //   , {
+        //   headers: {
+        //     Authorization: `Bearer ${token}`,
+        //   },
+        // }
+      );
+      setUser(userResponse.data);
+    } catch (error) {
+      console.error("Login error:", error);
     }
-  }, [auth.token]);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={[auth, setAuth]}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export { AuthProvider, AuthContext };

@@ -1,32 +1,23 @@
-import React, { useEffect, useState } from "react";
-import api from "../services/api";
+// ProfilePage.js
+import React, { useContext } from "react";
+import { AuthContext } from "../context/AuthContext"; // context api centrally handles api calls. Context api is an inbuilt library of React
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState({});
+  const { user, loading } = useContext(AuthContext);
+  console.log("user", user);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        console.log("getting inside try blolck");
-        //const token = localStorage.getItem("token");
-        //console.log("token", token);
-        const response = await api.get("/profile");
-        console.log("response", response);
-        setProfile(response.data);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  if (!user) {
+    return <div>Please log in.</div>;
+  }
 
   return (
     <div>
       <h1>Profile</h1>
-      {/* <img src={profile.profilePicture} alt={profile.name} /> */}
-      <p>Name: {profile.name}</p>
-      <p>Email: {profile.email}</p>
+      <p>Name: {user.name}</p>
+      <p>Email: {user.email}</p>
     </div>
   );
 };
